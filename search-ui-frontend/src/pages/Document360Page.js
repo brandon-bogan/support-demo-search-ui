@@ -31,6 +31,10 @@ import {
 
 import { mastheadTabInfo } from '../SearchUIApp';
 
+import TicketDetails from '../components/TicketDetails';
+import TicketRelatedContent from '../components/TicketRelatedContent'; 
+import CustomerPanel from '../components/CustomerPanel';
+
 type Document360PageProps = {
   location: PropTypes.object.isRequired;
   history: PropTypes.object.isRequired;
@@ -146,6 +150,7 @@ class Document360Page extends React.Component<Document360PageDefaultProps, Docum
       error: null,
       entityName: null,
       entityValue: null,
+      stopwords: ['a', 'about','all','also','an','and','any','are','as','at','be','been','between','but','by','can','could','did','do','first','for','from','had','has','have','he','her','him','his','how','i','if','in','into','is','it','its','just','like','may','me','more','my','new','no','not','now','of','on','one','only','or','other','our','out','people','said','she','should','so','some','than','the','their','them','then','there','these','they','this','time','to','two','up','very','was','way','we','well','were','what','when','which','who','will','with','would','years','you','your'],
     };
     (this: any).navigateToDoc = this.navigateToDoc.bind(this);
     (this: any).navigateToEntity = this.navigateToEntity.bind(this);
@@ -233,7 +238,13 @@ class Document360Page extends React.Component<Document360PageDefaultProps, Docum
           `${this.props.previewImageUri} as previewImageUri`,
           `${this.props.thumbnailImageUri} as thumbnailImageUri`,
           `${this.props.moreLikeThisQuery} as morelikethisquery`,
+          'jiratype as type',
+          'jirapriority as priority',
+          'jiraaffectsversion as versions',
+          'author as author',
+          'jiracustomer as jiracustomer',
         ];
+        console.log("Fields: ", fields);
         const entityFields = Array.from(this.props.entityFields.keys());
         req.fields = fields.concat(entityFields);
 
@@ -287,32 +298,35 @@ class Document360Page extends React.Component<Document360PageDefaultProps, Docum
       const doc = this.state.doc;
       const text = doc.getFirstValue('teaser');
       const thumbnailUri = doc.getFirstValue('thumbnailImageUri');
+      const table = doc.getFirstValue(FieldNames.TABLE);
+      var title = doc.getFirstValue(FieldNames.TITLE);
+      let ticket;
+      if(table == "JIRA"){
+        ticket = title.match("[A-Z]{3,7}.\\d*");
+        title = title.replace(ticket, "");
+      }
+
+      var tabs = [{tableName:"*",displayName:"All"},{tableName:"JIRA",displayName:"Jira"},{tableName:"Confluence",displayName:"Wiki"},{tableName:"Source Code",displayName:"Source Code"}];
 
       pageContents = (
         <Grid fluid>
           <Row>
-            <Col xs={10} sm={10}>
+            <Col style={{borderRight: '2px solid #243E64'}} xs={8} sm={8}>
               <h1 className="attivio-360-hed" >
-                <SearchResultTitle doc={doc} />
+                <SearchResultTitle doc={doc} title={title}/>
               </h1>
-              <Row>
-                <Col xs={8} sm={8}>
-                  <p
-                    className="attivio-search-result-desc"
-                    dangerouslySetInnerHTML={{ __html: text }} // eslint-disable-line react/no-danger
-                  />
-                </Col>
-                <Col xs={4} sm={4}>
-                  <DocumentEntityList doc={doc} entityFields={this.props.entityFields} />
-                </Col>
-              </Row>
-            </Col>
-            <Col xs={2} sm={2}>
-              <DocumentThumbnail uri={thumbnailUri} />
-            </Col>
-          </Row>
-          <Row>
-            <Col xs={8} sm={8}>
+              <TicketDetails doc={doc} ticket={ticket}/>
+              <div style={{marginTop: '20px', marginBottom: '20px'}}>
+              <Subheader360 label="Description" />
+              <p
+                className="attivio-search-result-desc"
+                dangerouslySetInnerHTML={{ __html: text }} // eslint-disable-line react/no-danger
+              />
+              </div>
+              <div style={{marginTop: '20px', marginBottom: '20px'}}>
+              <Subheader360 label="Related Content" />
+              <TicketRelatedContent doc={doc} searcher={this.context.searcher} tabs={tabs} stopwords={this.state.stopwords}/>
+              </div>
               <Subheader360 label="Knowledge Graph" />
               <KnowledgeGraphPanel
                 doc={doc}
@@ -325,8 +339,7 @@ class Document360Page extends React.Component<Document360PageDefaultProps, Docum
               />
             </Col>
             <Col xs={4} sm={4}>
-              <Subheader360 label="Similar Resulitles" />
-              <SimilarDocuments baseDoc={this.state.doc} baseUri={this.props.baseUri} />
+              <CustomerPanel doc={doc} searcher={this.context.searcher}/>
             </Col>
           </Row>
         </Grid>

@@ -11,7 +11,7 @@ export default {
     // (The case where you're using the development server to communicate with an
     // Attivio server on  different machine is the only time you should include this
     // information.)
-    baseUri: '/searchui',
+    baseUri: 'http://linpsvdog03:17000',
 
     // This is the prefix to use for routes in the application. For example, if it will
     // running under '/search', you will want to set this value to '/search' (note the leading slash
@@ -42,12 +42,13 @@ export default {
     // Note this should be obsolete once the display names are in the schema
     // for FactBook and we start querying the schema to get this map.
     entityFields: ObjectUtils.toMap({
+      author: 'Author/Reporter',
       people: 'People',
       company: 'Companies',
-      location: 'Locations',
       languages: 'Languages',
       date: 'Date',
       keyphrases: 'Key Phrases',
+      table: 'Table',
       // Factbook fields: uncomment the following lines if the Factbook module has been included in your project
       // spokenLanguage: 'Spoken Languages',
       // resource: 'Resources',
@@ -83,6 +84,11 @@ export default {
       nationality: '#77d5f3',
       distance: '#075484',
       coordinate: '#caeefa',
+      jiracustomer: 'red',
+      jiracomponent: 'green',
+      author: '#007dbc',
+      jiracc: 'purple',
+      to: 'orange',
     }),
 
     // The default comprehensive list of fields to include in search results
@@ -164,10 +170,12 @@ export default {
     resultsPerPage: 10,
     // An ordered list of facet requests to use for each query; facet expressions are also supported
     facets: [
-      'position',
       'keyphrases(maxbuckets=15)',
       'table',
       'tags',
+      'author',
+      'jirastatus',
+      'jiracustomer',
       'company',
       'people',
       'location',
@@ -224,9 +232,6 @@ export default {
     sentimentFacets: [// The facet field names that should be displayed with a sentiment bar
       'sentiment',
     ],
-    geoMapFacets: [ // The facet field names that should be displayed with a geographic map
-      'position',
-    ],
     // The maximum number of items to show in a facet. If there
     // are more than this many buckets for the facet, only this many, with
     // the highest counts, will be shown.
@@ -236,7 +241,6 @@ export default {
     // appear after the called-out ones, in the order they are in in the
     // response.facets array of the parent Searcher compoinent.
     orderHint: [
-      'position',
       'keyphrases',
       'date',
       'table',
@@ -301,10 +305,11 @@ export default {
     // Link across these fields to other documents in the document 360 insight graph
     insightGraphLinkingFields: [
       'people',
-      'company',
+      'jiracustomer',
+      'jiracomponent',
       'location',
       'author',
-      'cc',
+      'jiracc',
       'to',
       // Factbook fields - uncomment lines below if factbook module has been included in your project
       // 'country',
@@ -314,9 +319,9 @@ export default {
       // 'ethnicity',
     ],
     // The maximum number of linked documents to show per entity in the document 360 insight graph
-    maxLinkedDocs: 3,
+    maxLinkedDocs: 5,
     // If true, then the 360° page will show links to documents from any table. Set this to false to
     // only show links to documnents that come from tables other than the one the main document is in.
-    includeAllTables: false,
+    includeAllTables: true,
   },
 };
